@@ -1,0 +1,150 @@
+/**************************************************************
+ * Project           : BIOS 665 HW2
+ *
+ * Project name      : BIOS665-HW2.sas
+ *
+ * Author            : Wanting Jin
+ *
+ * Date created      : 2019-09-17
+ *
+ * Purpose           : Project for BIOS 665 Problem Set 2
+ *
+ * Revision History  :
+ *
+ * Date        Author    Ref (#)  Revision
+ *
+ *
+ *
+ * searchable reference phrase: *** [#] ***
+ *************************************************************/
+ods pdf startpage = no;
+ods pdf file = 'E:/classes/665/HW/hw2-output.pdf';
+ods trace on;
+/**************************************************************
+					SAS Code for Problem #1
+ *************************************************************/
+data hw1;
+	input treatment $ gender $ Severity  count @@;
+	datalines;
+High M 0 16       High M 1 32
+High F 0 21       High F 1 37
+Low  M 0 16       Low  M 1 49
+Low  F 0 27       Low  F 1 27
+Placebo M 0 34    Placebo M 1 22
+Placebo F 0 39    Placebo F 1 15
+;
+run;
+
+/* question (a) iii */
+ods select ParameterEstimates ContrastTest;
+proc logistic data = hw1;
+	freq count;
+	class treatment(ref = "Placebo") gender(ref = "M") / param = ref;
+	model Severity(event = "1") = gender treatment gender*treatment;
+	contrast 'intersections' gender*treatment 1 -1;
+run;
+
+/* question (b) ii*/
+ods select ModelANOVA ParameterEstimates;
+proc logistic data = hw1;
+	freq count;
+	class treatment(ref = "Placebo") gender(ref = "M") / param = ref;
+	model Severity(event = "1") = treatment gender/scale = none aggregate;
+	oddsratio treatment/cl=both;
+run;
+
+/* question (b) iii*/
+ods select  OddsRatiosWald  OddsRatiosPL ContrastTest;
+proc logistic data = hw1;
+	freq count;
+	class treatment(ref = "Placebo") gender(ref = "M") / param = ref;
+	model Severity(event = "1") = treatment gender/scale = none aggregate;
+	oddsratio treatment/cl=both;
+	contrast "F" gender 1 0;
+run;
+
+/**************************************************************
+					SAS Code for Problem #2
+ *************************************************************/
+data hw2;
+	input region $ stress favorate $  count @@;
+	datalines;
+East 1 F 53  East 1 U 20
+East 2 F 109 East 2 U 97
+East 3 F 85  East 3 U 76
+West 1 F 51  West 1 U 37
+West 2 F 67  West 2 U 59
+West 3 F 118 West 3 U 92
+;
+
+/* question (b)*/
+ods select ParameterEstimates OddsRatios;
+proc logistic data = hw2;
+	freq count;
+	class region(ref = "East") stress(ref = "1")/ param = ref;
+	model favorate(event = "F") = region stress/scale = none aggregate;
+run;
+
+/* question (c) & (f)*/
+ods select  OddsRatiosWald  OddsRatiosPL GoodnessOfFit FitStatistics;
+proc logistic data = hw2;
+	freq count;
+	class region(ref = "East") stress(ref = "2")/ param = ref;
+	model favorate(event = "F") = region stress/scale = none aggregate;
+	oddsratio stress/cl=both;
+run;
+
+/* question (d)*/
+ods select ContrastTest;
+proc logistic data = hw2;
+	freq count;
+	class region(ref = "East") stress(ref = "1")/ param = ref;
+	model favorate(event = "F") = region stress;
+	contrast 'West' region 1 0;
+run;
+	
+/**************************************************************
+					SAS Code for Problem #4
+ *************************************************************/
+data hw4;
+	input gender $ Before  After   count @@;
+	datalines;
+M 1 1 10  M 1 0 18
+M 0 1 2   M 0 0 10
+F 1 1 22  F 1 0 37
+F 0 1 15  F 0 0 19
+;
+run;
+
+/* question (a)*/
+proc freq data = hw4;
+	weight count;
+	tables Before*After/nocol norow nopercent chisq;
+run;
+	
+/* question (b)*/
+proc freq data = hw4;
+	where gender = "M";
+	weight count;
+	tables Before*After/nocol norow nopercent chisq;
+	exact chisq;
+run;
+	
+proc freq data = hw4;
+	where gender = "F";
+	weight count;
+	tables Before*After/nocol norow nopercent chisq;
+run;
+
+/* question (c)*/
+proc freq data = hw4;
+	weight count;
+	tables gender*Before*After/nocol norow nopercent cmh chisq measures;
+run;
+	
+/* question (d)*/
+proc freq data = hw4 order= data;
+	weight count;
+	tables gender*Before*After/nocol norow nopercent chisq cmh(mf);
+run;
+
